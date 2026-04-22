@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Product;
 use Database\Factories\ProductFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -7,7 +8,28 @@ describe('Product', function () {
     uses(RefreshDatabase::class);
 
     /*
-    * STOCK SETTUP
+    * PRODUCT CREATION
+    */
+    it('product name should not be shorter than least 3 characters', function () {
+        Product::register([
+            'name' => 'ab',
+            'description' => 'Test product',
+            'amount' => 1000,
+            'quantity' => 10,
+        ]);
+    })->throws(InvalidArgumentException::class, 'Name must be at least 3 characters long.');
+
+    it('product name should not exceed 50 characters', function () {
+        Product::register([
+            'name' => str_repeat("a", 51),
+            'description' => 'Test product',
+            'amount' => 1000,
+            'quantity' => 10,
+        ]);
+    })->throws(InvalidArgumentException::class, 'Name must not exceed 50 characters');
+
+    /*
+    * STOCK SETUP
     */
     it('null amount should be set to 0', function () {
         $product = ProductFactory::new()->make(['amount' => null]);
@@ -54,7 +76,6 @@ describe('Product', function () {
         $product = ProductFactory::new()->make();
         $product->stockIncrement(-10);
     })->throws(InvalidArgumentException::class, 'Forbidden operation');
-
 
     it('rejects to increment quantity by 0', function () {
         $product = ProductFactory::new()->make();
