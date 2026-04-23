@@ -28,6 +28,40 @@ class Product extends Model
         'quantity' => 'integer',
     ];
 
+    public static function register(array $array)
+    {
+        if (strlen($array['name']) < 3) {
+            throw new \InvalidArgumentException(
+                'Name must be at least 3 characters long.'
+            );
+        }
+
+        if (strlen($array['name']) > 50) {
+            throw new \InvalidArgumentException(
+                'Name must not exceed 50 characters'
+            );
+        }
+
+        if (isset($array['amount']) && $array['amount'] < 0) {
+            throw new \InvalidArgumentException(
+                'Amount must be greater than 0 (ZERO).'
+            );
+        }
+
+        if (isset($array['quantity']) && $array['quantity'] < 0) {
+            throw new \InvalidArgumentException(
+                'Quantity must be greater than 0 (ZERO).'
+            );
+        }
+
+        return Product::create([
+            'name' => $array['name'],
+            'description' => $array['description'],
+            'amount' => $array['amount'],
+            'quantity' => $array['quantity'],
+        ]);
+    }
+
     /*
     * ACCESSORS
     */
@@ -54,32 +88,40 @@ class Product extends Model
     /*
     * MUTATORS
     */
-    public function setAmountAttribute($value)
+    public function setAmountAttribute($value): void
     {
         if (is_string($value)) {
             $value = (float) str_replace([',', ' ', 'R$'], '', $value);
         }
 
         if ($value < 0) {
-            throw new \InvalidArgumentException('Amount must be greater than 0 (ZERO).');
+            throw new \InvalidArgumentException(
+                'Amount must be greater than 0 (ZERO).'
+            );
         }
 
         $this->attributes['amount'] = (int) round($value * 100);
     }
 
-    public function setQuantityAttribute($value)
+    public function setQuantityAttribute($value): void
     {
         if (is_string($value)) {
             $value = str_replace([',', ' '], '', $value);
         }
 
         if ($value < 0) {
-            throw new \InvalidArgumentException('Quantity must be greater than 0 (ZERO).');
+            throw new \InvalidArgumentException(
+                'Quantity must be greater than 0 (ZERO).'
+            );
         }
 
         $this->attributes['quantity'] = $value;
     }
 
+    /*
+    * STOCK MANAGEMENT
+    */
+    // TODO: Create a stock history to log changes in stock
     public function stockIncrement($value = 1)
     {
         if (is_string($value)) {
@@ -103,8 +145,9 @@ class Product extends Model
             throw new \InvalidArgumentException('Forbidden operation');
         }
 
-        if ($this->attributes['quantity'] < 0 || ($this->attributes['quantity'] - $value) < 0)
-        {
+        if ($this->attributes['quantity'] < 0 ||
+            ($this->attributes['quantity'] - $value) < 0
+        ) {
             return "Not enough {$this->name} in stock";
         }
 
