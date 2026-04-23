@@ -28,7 +28,7 @@ class Product extends Model
         'quantity' => 'integer',
     ];
 
-    public static function register(array $array)
+    public static function register(array $array): void
     {
         if (strlen($array['name']) < 3) {
             throw new \InvalidArgumentException(
@@ -54,7 +54,7 @@ class Product extends Model
             );
         }
 
-        return Product::create([
+        Product::create([
             'name' => $array['name'],
             'description' => $array['description'],
             'amount' => $array['amount'],
@@ -65,22 +65,22 @@ class Product extends Model
     /*
     * ACCESSORS
     */
-    public function getAmountAttribute($value)
+    public function getAmountAttribute($value): float
     {
         return $value / 100;
     }
 
-    public function getFormattedAmountAttribute()
+    public function getFormattedAmountAttribute(): string
     {
         return 'R$ '.number_format($this->amount, 2, ',', '.');
     }
 
-    public function getAmountInCentsAttribute()
+    public function getAmountInCentsAttribute(): int
     {
         return (int) $this->attributes['amount'];
     }
 
-    public function getQuantityAttribute($value)
+    public function getQuantityAttribute($value): int
     {
         return (int) $value;
     }
@@ -122,7 +122,7 @@ class Product extends Model
     * STOCK MANAGEMENT
     */
     // TODO: Create a stock history to log changes in stock
-    public function stockIncrement($value = 1)
+    public function stockIncrement($value = 1): void
     {
         if (is_string($value)) {
             $value = (int) str_replace([',', ' '], '', $value);
@@ -148,7 +148,7 @@ class Product extends Model
         if ($this->attributes['quantity'] < 0 ||
             ($this->attributes['quantity'] - $value) < 0
         ) {
-            return "Not enough {$this->name} in stock";
+            throw new \RuntimeException("Not enough {$this->name} in stock");
         }
 
         $this->attributes['quantity'] -= $value;
