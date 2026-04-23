@@ -21,7 +21,7 @@ describe('Product', function () {
 
     it('product name should not exceed 50 characters', function () {
         Product::register([
-            'name' => str_repeat("a", 51),
+            'name' => str_repeat('a', 51),
             'description' => 'Test product',
             'amount' => 1000,
             'quantity' => 10,
@@ -63,11 +63,9 @@ describe('Product', function () {
     })->throws(InvalidArgumentException::class, 'Forbidden operation');
 
     it('fails to decrease stock bellow 0', function () {
-        $product = ProductFactory::new()->make(['quantity' => 0]);
-        $result = $product->stockDecrement(2);
-        expect($result)->toBe("Not enough {$product->name} in stock");
-        expect($product->quantity)->toBe(0);
-    });
+        $product = ProductFactory::new()->make(['name' => 'Test Product', 'quantity' => 0]);
+        $product->stockDecrement(2);
+    })->throws(RuntimeException::class, 'Not enough Test Product in stock');
 
     /*
     * STOCK INCREMENT
