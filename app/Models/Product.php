@@ -28,38 +28,13 @@ class Product extends Model
         'quantity' => 'integer',
     ];
 
-    public static function register(array $array): void
+    public static function register(array $array): self
     {
-        if (strlen($array['name']) < 3) {
-            throw new \InvalidArgumentException(
-                'Name must be at least 3 characters long.'
-            );
-        }
+        $product = new self;
+        $product->fill($array);
+        $product->save();
 
-        if (strlen($array['name']) > 50) {
-            throw new \InvalidArgumentException(
-                'Name must not exceed 50 characters'
-            );
-        }
-
-        if (isset($array['amount']) && $array['amount'] < 0) {
-            throw new \InvalidArgumentException(
-                'Amount must be greater than 0 (ZERO).'
-            );
-        }
-
-        if (isset($array['quantity']) && $array['quantity'] < 0) {
-            throw new \InvalidArgumentException(
-                'Quantity must be greater than 0 (ZERO).'
-            );
-        }
-
-        Product::create([
-            'name' => $array['name'],
-            'description' => $array['description'],
-            'amount' => $array['amount'],
-            'quantity' => $array['quantity'],
-        ]);
+        return $product;
     }
 
     /*
@@ -88,13 +63,41 @@ class Product extends Model
     /*
     * MUTATORS
     */
+    public function setNameAttribute(string $value): void
+    {
+        if (strlen($value) < 3) {
+            throw new \InvalidArgumentException(
+                'Name must be at least 3 characters long.'
+            );
+        }
+
+        if (strlen($value) > 50) {
+            throw new \InvalidArgumentException(
+                'Name must not exceed 50 characters'
+            );
+        }
+
+        $this->attributes['name'] = $value;
+    }
+
+    public function setDescriptionAttribute(string $value): void
+    {
+        if (strlen($value) > 255) {
+            throw new \InvalidArgumentException(
+                'Description must not exceed 255 characters'
+            );
+        }
+
+        $this->attributes['description'] = $value;
+    }
+
     public function setAmountAttribute($value): void
     {
         if (is_string($value)) {
             $value = (float) str_replace([',', ' ', 'R$'], '', $value);
         }
 
-        if ($value < 0) {
+        if ($value <= 0) {
             throw new \InvalidArgumentException(
                 'Amount must be greater than 0 (ZERO).'
             );
@@ -109,9 +112,9 @@ class Product extends Model
             $value = str_replace([',', ' '], '', $value);
         }
 
-        if ($value < 0) {
+        if (! isset($value) || $value < 0) {
             throw new \InvalidArgumentException(
-                'Quantity must be greater than 0 (ZERO).'
+                'Quantity must be equals or greater than 0 (ZERO).'
             );
         }
 
@@ -129,10 +132,12 @@ class Product extends Model
         }
 
         if ($value <= 0) {
-            throw new \InvalidArgumentException('Forbidden operation');
+            throw new \InvalidArgumentException(
+                'Forbidden operation');
         }
 
         $this->attributes['quantity'] += $value;
+        $this->save();
     }
 
     public function stockDecrement($value = 1)
@@ -142,15 +147,18 @@ class Product extends Model
         }
 
         if ($value <= 0) {
-            throw new \InvalidArgumentException('Forbidden operation');
+            throw new \InvalidArgumentException(
+                'Forbidden operation');
         }
 
         if ($this->attributes['quantity'] < 0 ||
             ($this->attributes['quantity'] - $value) < 0
         ) {
-            throw new \RuntimeException("Not enough {$this->name} in stock");
+            throw new \RuntimeException(
+                "Not enough {$this->attributes['name']} in stock");
         }
 
         $this->attributes['quantity'] -= $value;
+        $this->save();
     }
 }
