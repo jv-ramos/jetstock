@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
 
 class Product extends Model
 {
@@ -30,16 +30,68 @@ class Product extends Model
 
     public static function register(array $array): self
     {
-        $product = new self;
+        $product = new self();
         $product->fill($array);
         $product->save();
 
         return $product;
     }
 
-    /*
-    * ACCESSORS
-    */
+    public static function change(int $id, array $array): self
+    {
+        $product = self::findOrFail($id);
+        $product->fill($array);
+        $product->save();
+
+        return $product;
+    }
+
+    public static function findByName(string $name): ?self
+    {
+        if (empty($name)) {
+            throw new \InvalidArgumentException(
+                'Name must not be empty'
+            );
+        };
+
+        $product = self::where('name', $name)->first();
+
+        if (! $product) {
+            throw new \RuntimeException(
+                "Product with name $name not found"
+            );
+        } else {
+            return $product;
+        }
+    }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+        static::saving(function ($product) {
+            $product->validateUniqueName();
+            $product->setAmountAttribute($product->amount);
+        });
+    }
+
+    protected function validateUniqueName(): void
+    {
+        $query = self::where('name', $this->name);
+
+        if ($this->exists) {
+            $query->where('id', '!=', $this->id);
+        }
+
+        if ($query->exists()) {
+            throw new \InvalidArgumentException(
+                "Product with name $this->name already exists"
+            );
+        }
+    }
+
+    /**
+     * ACCESSORS
+     */
     public function getAmountAttribute($value): float
     {
         return $value / 100;
@@ -47,7 +99,7 @@ class Product extends Model
 
     public function getFormattedAmountAttribute(): string
     {
-        return 'R$ '.number_format($this->amount, 2, ',', '.');
+        return 'R$ ' . number_format($this->amount, 2, ',', '.');
     }
 
     public function getAmountInCentsAttribute(): int
@@ -60,9 +112,11 @@ class Product extends Model
         return (int) $value;
     }
 
-    /*
-    * MUTATORS
-    */
+    /**
+     * MUTATORS
+     *
+     * @param mixed $value
+     */
     public function setNameAttribute(string $value): void
     {
         if (strlen($value) < 3) {
@@ -90,7 +144,9 @@ class Product extends Model
 
         $this->attributes['description'] = $value;
     }
-
+    /**
+     * @param mixed $value
+     */
     public function setAmountAttribute($value): void
     {
         if (is_string($value)) {
@@ -105,7 +161,9 @@ class Product extends Model
 
         $this->attributes['amount'] = (int) round($value * 100);
     }
-
+    /**
+     * @param mixed $value
+     */
     public function setQuantityAttribute($value): void
     {
         if (is_string($value)) {
@@ -121,9 +179,10 @@ class Product extends Model
         $this->attributes['quantity'] = $value;
     }
 
-    /*
-    * STOCK MANAGEMENT
-    */
+    /**
+     * STOCK MANAGEMENT
+     * @param mixed $value
+     */
     // TODO: Create a stock history to log changes in stock
     public function stockIncrement($value = 1): void
     {
@@ -133,14 +192,17 @@ class Product extends Model
 
         if ($value <= 0) {
             throw new \InvalidArgumentException(
-                'Forbidden operation');
+                'Forbidden operation'
+            );
         }
 
         $this->attributes['quantity'] += $value;
         $this->save();
     }
-
-    public function stockDecrement($value = 1)
+    /**
+     * @param mixed $value
+     */
+    public function stockDecrement($value = 1): void
     {
         if (is_string($value)) {
             $value = (int) str_replace([',', ' '], '', $value);
@@ -148,14 +210,17 @@ class Product extends Model
 
         if ($value <= 0) {
             throw new \InvalidArgumentException(
-                'Forbidden operation');
+                'Forbidden operation'
+            );
         }
 
-        if ($this->attributes['quantity'] < 0 ||
-            ($this->attributes['quantity'] - $value) < 0
+        if (
+            $this->attributes['quantity'] < 0
+            || ($this->attributes['quantity'] - $value) < 0
         ) {
             throw new \RuntimeException(
-                "Not enough {$this->attributes['name']} in stock");
+                "Not enough {$this->attributes['name']} in stock"
+            );
         }
 
         $this->attributes['quantity'] -= $value;
