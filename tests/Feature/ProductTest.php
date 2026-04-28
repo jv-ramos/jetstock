@@ -24,9 +24,8 @@ describe('Product', function () {
         ]);
     })->throws(
         InvalidArgumentException::class,
-        'Amount must be greater than 0 (ZERO).'
+        'Forbidden operation'
     );
-
 
     it('should create product successfully', function () {
         $product = Product::register([
@@ -42,5 +41,26 @@ describe('Product', function () {
         expect($product->amount)->toBe(1000.00);
         expect($product->getAmountInCentsAttribute())->toBe(100000); # testing accessor method
         expect($product->quantity)->toBe(10);
+    });
+
+    /**
+     * CALCULATE
+     */
+    it('should calculate total inventory successfully', function () {
+        Product::register([
+            'name' => 'Test Product 1',
+            'description' => 'This is a test product.',
+            'amount' => 20,
+            'quantity' => 10,
+        ]);
+        Product::register([
+            'name' => 'Test Product 2',
+            'description' => 'This is a test product.',
+            'amount' => 10,
+            'quantity' => 5,
+        ]);
+        $product = new Product();
+
+        expect($product->calculateTotalInventoryValue())->toBe(250.0);
     });
 });

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
+use App\Constants;
 
 class Product extends Model
 {
@@ -18,52 +19,9 @@ class Product extends Model
         'quantity',
     ];
 
-    protected $attributes = [
-        'amount' => 0,
-        'quantity' => 0,
-    ];
+    protected $attributes = ['amount' => 0, 'quantity' => 0,];
 
-    protected $casts = [
-        'amount' => 'integer',
-        'quantity' => 'integer',
-    ];
-
-    public static function register(array $array): self
-    {
-        $product = new self();
-        $product->fill($array);
-        $product->save();
-
-        return $product;
-    }
-
-    public static function change(int $id, array $array): self
-    {
-        $product = self::findOrFail($id);
-        $product->fill($array);
-        $product->save();
-
-        return $product;
-    }
-
-    public static function findByName(string $name): ?self
-    {
-        if (empty($name)) {
-            throw new \InvalidArgumentException(
-                'Name must not be empty'
-            );
-        };
-
-        $product = self::where('name', $name)->first();
-
-        if (! $product) {
-            throw new \RuntimeException(
-                "Product with name $name not found"
-            );
-        } else {
-            return $product;
-        }
-    }
+    protected $casts = ['amount' => 'integer', 'quantity' => 'integer',];
 
     protected static function boot(): void
     {
@@ -71,6 +29,7 @@ class Product extends Model
         static::saving(function ($product) {
             $product->validateUniqueName();
             $product->setAmountAttribute($product->amount);
+            $product->setQuantityAttribute($product->quantity);
         });
     }
 
@@ -84,7 +43,7 @@ class Product extends Model
 
         if ($query->exists()) {
             throw new \InvalidArgumentException(
-                "Product with name $this->name already exists"
+                __('message.products.name_unique', ['name' => $this->name])
             );
         }
     }
@@ -114,20 +73,18 @@ class Product extends Model
 
     /**
      * MUTATORS
-     *
-     * @param mixed $value
      */
     public function setNameAttribute(string $value): void
     {
-        if (strlen($value) < 3) {
+        if (strlen($value) < Constants::NAME_MIN_CHAR) {
             throw new \InvalidArgumentException(
-                'Name must be at least 3 characters long.'
+                __('message.products.min_name_length', ['min' => Constants::NAME_MIN_CHAR])
             );
         }
 
-        if (strlen($value) > 50) {
+        if (strlen($value) > Constants::NAME_MAX_CHAR) {
             throw new \InvalidArgumentException(
-                'Name must not exceed 50 characters'
+                __('message.products.max_name_length', ['max' => Constants::NAME_MAX_CHAR])
             );
         }
 
@@ -136,34 +93,26 @@ class Product extends Model
 
     public function setDescriptionAttribute(string $value): void
     {
-        if (strlen($value) > 255) {
+        if (strlen($value) > Constants::DESC_MAX_CHAR) {
             throw new \InvalidArgumentException(
-                'Description must not exceed 255 characters'
+                __('message.products.max_description_length', ['max' => Constants::DESC_MAX_CHAR])
             );
         }
 
         $this->attributes['description'] = $value;
     }
-    /**
-     * @param mixed $value
-     */
+
     public function setAmountAttribute($value): void
     {
         if (is_string($value)) {
             $value = (float) str_replace([',', ' ', 'R$'], '', $value);
         }
 
-        if ($value <= 0) {
-            throw new \InvalidArgumentException(
-                'Amount must be greater than 0 (ZERO).'
-            );
-        }
+        $this->isLessThanOrEqualsZero($value);
 
         $this->attributes['amount'] = (int) round($value * 100);
     }
-    /**
-     * @param mixed $value
-     */
+
     public function setQuantityAttribute($value): void
     {
         if (is_string($value)) {
@@ -172,7 +121,7 @@ class Product extends Model
 
         if (! isset($value) || $value < 0) {
             throw new \InvalidArgumentException(
-                'Quantity must be equals or greater than 0 (ZERO).'
+                __('message.products.quantity_required')
             );
         }
 
@@ -180,50 +129,125 @@ class Product extends Model
     }
 
     /**
-     * STOCK MANAGEMENT
-     * @param mixed $value
+     * CRUD METHODS
      */
-    // TODO: Create a stock history to log changes in stock
+    public static function register(array $array): self
+    {
+        $product = new self();
+        $product->fill($array);
+        $product->save();
+
+        return $product;
+    }
+
+    public static function change(int $id, array $array): self
+    {
+        $product = self::findOrFail($id);
+
+        if (isset($array['name']) && $product->name !== $array['name']) {
+            throw new \InvalidArgumentException(
+                __('message.products.name_unchangeable')
+            );
+        }
+
+        $product->fill($array);
+        $product->save();
+
+        return $product;
+    }
+
+    public static function remove(string $name): void
+    {
+        $query = self::findByName($name);
+
+        if (! $query) {
+            throw new \RuntimeException(
+                __('message.products.name_not_found', ['name' => $name])
+            );
+        };
+
+        if ($query->quantity > 0) {
+            throw new \RuntimeException(
+                __('message.products.cannot_delete_qty')
+            );
+        };
+
+        $query->delete();
+    }
+
+    public static function findByName(string $name): ?self
+    {
+        if (empty($name)) {
+            throw new \InvalidArgumentException(
+                __('message.products.name_required')
+            );
+        };
+
+        $product = self::where('name', $name)->first();
+
+        if (! $product) {
+            throw new \RuntimeException(
+                __('message.products.name_not_found', ['name' => $name])
+            );
+        } else {
+            return $product;
+        }
+    }
+
+    /**
+     * STOCK METHODS
+     */
     public function stockIncrement($value = 1): void
     {
+        // TODO: Create a stock history to log changes in stock
         if (is_string($value)) {
             $value = (int) str_replace([',', ' '], '', $value);
         }
 
-        if ($value <= 0) {
-            throw new \InvalidArgumentException(
-                'Forbidden operation'
-            );
-        }
+        $this->isLessThanOrEqualsZero($value);
 
         $this->attributes['quantity'] += $value;
         $this->save();
     }
-    /**
-     * @param mixed $value
-     */
+
     public function stockDecrement($value = 1): void
     {
         if (is_string($value)) {
             $value = (int) str_replace([',', ' '], '', $value);
         }
 
-        if ($value <= 0) {
-            throw new \InvalidArgumentException(
-                'Forbidden operation'
-            );
-        }
+        $this->isLessThanOrEqualsZero($value);
 
-        if (
-            $this->attributes['quantity'] < 0
-            || ($this->attributes['quantity'] - $value) < 0
-        ) {
-            throw new \RuntimeException(
-                "Not enough {$this->attributes['name']} in stock"
-            );
-        }
+        $this->validateStock($this, $value);
 
         $this->attributes['quantity'] -= $value;
         $this->save();
+    }
+
+    private function validateStock(Product $product, int $requestedQuantity): void
+    {
+        if (
+            $this->isLessThanOrEqualsZero($product->quantity)
+            || $product->quantity < $requestedQuantity
+        ) {
+            throw new \InvalidArgumentException(
+                __(
+                    'message.products.quantity_exceed',
+                    [
+                        'name' => $product->name,
+                        'quantity' => $product->quantity,
+                    ]
+                )
+            );
+        };
+    }
+
+    private function isLessThanOrEqualsZero($value): void
+    {
+        if ($value <= 0) {
+            throw new \InvalidArgumentException(
+                __('message.general.fbd_op')
+            );
+        }
     }
 }
