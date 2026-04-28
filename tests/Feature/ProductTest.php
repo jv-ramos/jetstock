@@ -43,6 +43,18 @@ describe('Product', function () {
         expect($product->quantity)->toBe(10);
     });
 
+    it('should index products successfully', function () {
+        ProductFactory::new()->create(['name' => 'Test Product 1']);
+        ProductFactory::new()->create(['name' => 'Test Product 2']);
+        ProductFactory::new()->create(['name' => 'Test Product 3']);
+
+        $response = $this->withHeaders(['accept' => 'application/json'])->get('/api/v1/products');
+
+        $response->assertOk();
+        expect($response->json())->toHaveKey('data');
+        expect(count($response->json('data')))->toBe(3);
+    });
+
     /**
      * CALCULATE
      */
