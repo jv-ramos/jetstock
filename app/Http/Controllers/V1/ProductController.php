@@ -37,12 +37,9 @@ class ProductController extends Controller
         //
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Product $product): void
+    public function show(Product $product): ProductResource
     {
-        //
+        return ProductResource::make($product);
     }
 
     /**
