@@ -5,13 +5,11 @@ namespace Tests\Unit;
 use App\Models\Product;
 use Database\Factories\ProductFactory;
 use InvalidArgumentException;
-use RuntimeException;
 
 describe('Product', function () {
-
-    /*
-    * PRODUCT CREATION
-    */
+    /**
+     * PRODUCT CREATION
+     */
     it('throws exception if product name is shorter than 3 characters', function () {
         Product::register([
             'name' => 'ab',
@@ -48,14 +46,14 @@ describe('Product', function () {
         'Description must not exceed 255 characters'
     );
 
-    /*
-    * STOCK SETUP
-    */
+    /**
+     * STOCK SETUP
+     */
     it('throws exception when amount is null', function () {
         ProductFactory::new()->make(['amount' => null]);
     })->throws(
         InvalidArgumentException::class,
-        'Amount must be greater than 0 (ZERO).'
+        'Forbidden operation'
     );
 
     it('throws exception when quantity is null', function () {
@@ -69,7 +67,7 @@ describe('Product', function () {
         ProductFactory::new()->make(['amount' => -10]);
     })->throws(
         InvalidArgumentException::class,
-        'Amount must be greater than 0 (ZERO).'
+        'Forbidden operation'
     );
 
     it('throws exception when quantity is negative', function () {
@@ -79,9 +77,9 @@ describe('Product', function () {
         'Quantity must be equals or greater than 0 (ZERO).'
     );
 
-    /*
-    * STOCK DECREMENT
-    */
+    /**
+     * STOCK DECREMENT
+     */
     it('rejects to subtract quantity by negative values', function () {
         $product = ProductFactory::new()->make();
         $product->stockDecrement(-10);
@@ -105,13 +103,13 @@ describe('Product', function () {
         ]);
         $product->stockDecrement(2);
     })->throws(
-        RuntimeException::class,
-        'Not enough Test Product in stock'
+        InvalidArgumentException::class,
+        'Forbidden operation'
     );
 
-    /*
-    * STOCK INCREMENT
-    */
+    /**
+     * STOCK INCREMENT
+     */
     it('rejects to increment quantity by negative values', function () {
         $product = ProductFactory::new()->make();
         $product->stockIncrement(-10);
