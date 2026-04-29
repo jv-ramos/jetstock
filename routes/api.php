@@ -9,6 +9,6 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::prefix('/v1/products')->group(function () {
-    Route::get('/', [ProductController::class, 'index']);
+    Route::apiResource('/', ProductController::class)->only('index', 'store', 'update', 'destroy');
     Route::get('/{product}', [ProductController::class, 'show']);
 });
