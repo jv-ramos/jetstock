@@ -116,7 +116,7 @@ describe('Product', function () {
             'description' => 'This is a test product.',
             'amount' => 0,
             'quantity' => 10,
-        ])->assertStatus(422)->assertJson(['message' => 'The amount field must be at least 1.']);
+        ])->assertStatus(422)->assertJson(['message' => 'The amount field must be at least 0.01.']);
     });
 
     it('should fail to register product with negative amount', function () {
@@ -125,7 +125,7 @@ describe('Product', function () {
             'description' => 'This is a test product.',
             'amount' => -1,
             'quantity' => 10,
-        ])->assertStatus(422)->assertJson(['message' => 'The amount field must be at least 1.']);
+        ])->assertStatus(422)->assertJson(['message' => 'The amount field must be at least 0.01.']);
     });
 
     it('should fail to register product with negative quantity', function () {
