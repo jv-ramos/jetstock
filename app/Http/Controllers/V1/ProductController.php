@@ -4,9 +4,9 @@ namespace App\Http\Controllers\V1;
 
 use App\Models\Product;
 use App\Http\Requests\StoreRequest;
+use App\Http\Requests\UpdateRequest;
 use App\Http\Resources\ProductResource;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
@@ -32,9 +32,9 @@ class ProductController extends Controller
         return ProductResource::make($product);
     }
 
-    public function update(Request $request, Product $product): void
+    public function update(UpdateRequest $request, Product $product): void
     {
-        //
+        $this->product::change($product->id, $request->validated());
     }
 
     public function destroy(Product $product): void
