@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\Product\InvalidProductAttributeException;
 use App\Models\Product;
 use Database\Factories\ProductFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use InvalidArgumentException;
 
 describe('Product', function () {
     uses(RefreshDatabase::class);
@@ -14,7 +14,7 @@ describe('Product', function () {
         ProductFactory::new()->create(['name' => 'Test Product']);
         ProductFactory::new()->create(['name' => 'Test Product']);
     })->throws(
-        InvalidArgumentException::class,
+        InvalidProductAttributeException::class,
         'Product with name Test Product already exists'
     );
 
@@ -23,7 +23,7 @@ describe('Product', function () {
             'name' => 'Test Product',
         ]);
     })->throws(
-        InvalidArgumentException::class,
+        InvalidProductAttributeException::class,
         'Forbidden operation'
     );
 

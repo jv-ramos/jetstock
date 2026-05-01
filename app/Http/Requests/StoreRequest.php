@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRequest extends FormRequest
@@ -28,5 +29,17 @@ class StoreRequest extends FormRequest
             'amount' => 'required|numeric|min:0.01',
             'quantity' => 'required|integer|min:0',
         ];
+    }
+
+    public function failedValidation(Validator $validator): void
+    {
+        throw new \Illuminate\Validation\ValidationException(
+            $validator,
+            response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422)
+        );
     }
 }
