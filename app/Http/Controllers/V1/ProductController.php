@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\V1;
 
 use App\Models\Product;
+use App\Http\Requests\DestroyRequest;
 use App\Http\Requests\StoreRequest;
 use App\Http\Requests\UpdateRequest;
 use App\Http\Resources\ProductResource;
@@ -37,8 +38,8 @@ class ProductController extends Controller
         $this->product::change($product->id, $request->validated());
     }
 
-    public function destroy(Product $product): void
+    public function destroy(DestroyRequest $request, Product $product): void
     {
-        //
+        $this->product::remove($product->name);
     }
 }

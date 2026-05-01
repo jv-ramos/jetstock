@@ -5,9 +5,8 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\ValidationException;
 
-class StoreRequest extends FormRequest
+class DestroyRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,16 +24,12 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|unique:products,name|string|min:3|max:50',
-            'description' => 'string|max:255',
-            'amount' => 'required|numeric|min:0.01',
-            'quantity' => 'required|integer|min:0',
         ];
     }
 
     public function failedValidation(Validator $validator): void
     {
-        throw new ValidationException(
+        throw new \Illuminate\Validation\ValidationException(
             $validator,
             response()->json([
                 'success' => false,

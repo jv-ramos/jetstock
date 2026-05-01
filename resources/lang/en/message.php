@@ -13,6 +13,7 @@ return [
         'quantity_required' => 'Quantity must be equals or greater than 0 (ZERO).',
         'quantity_exceed' => 'Not enough :name in stock. Only :quantity available',
         'cannot_delete_qty' => 'Cannot delete product with quantity greater than 0',
+        'not_found' => 'Product not found.',
     ],
     'general' => [
         'fbd_op' => 'Forbidden operation',
