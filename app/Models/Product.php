@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Constants;
+use App\Exceptions\Product\InvalidProductAttributeException;
+use App\Exceptions\Product\ProductNotFoundException;
+use App\Exceptions\Product\ProductSupplyNotEmptyException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use InvalidArgumentException;
-use App\Constants;
 
 class Product extends Model
 {
@@ -19,9 +21,9 @@ class Product extends Model
         'quantity',
     ];
 
-    protected $attributes = ['amount' => 0, 'quantity' => 0,];
+    protected $attributes = ['amount' => 0, 'quantity' => 0];
 
-    protected $casts = ['amount' => 'integer', 'quantity' => 'integer',];
+    protected $casts = ['amount' => 'integer', 'quantity' => 'integer'];
 
     protected static function boot(): void
     {
@@ -42,7 +44,7 @@ class Product extends Model
         }
 
         if ($query->exists()) {
-            throw new \InvalidArgumentException(
+            throw new InvalidProductAttributeException(
                 __('message.products.name_unique', ['name' => $this->name])
             );
         }
@@ -58,7 +60,7 @@ class Product extends Model
 
     public function getFormattedAmountAttribute(): string
     {
-        return 'R$ ' . number_format($this->amount, 2, ',', '.');
+        return 'R$ '.number_format($this->amount, 2, ',', '.');
     }
 
     public function getAmountInCentsAttribute(): int
@@ -77,13 +79,13 @@ class Product extends Model
     public function setNameAttribute(string $value): void
     {
         if (strlen($value) < Constants::NAME_MIN_CHAR) {
-            throw new \InvalidArgumentException(
+            throw new InvalidProductAttributeException(
                 __('message.products.min_name_length', ['min' => Constants::NAME_MIN_CHAR])
             );
         }
 
         if (strlen($value) > Constants::NAME_MAX_CHAR) {
-            throw new \InvalidArgumentException(
+            throw new InvalidProductAttributeException(
                 __('message.products.max_name_length', ['max' => Constants::NAME_MAX_CHAR])
             );
         }
@@ -94,7 +96,7 @@ class Product extends Model
     public function setDescriptionAttribute(string $value): void
     {
         if (strlen($value) > Constants::DESC_MAX_CHAR) {
-            throw new \InvalidArgumentException(
+            throw new InvalidProductAttributeException(
                 __('message.products.max_description_length', ['max' => Constants::DESC_MAX_CHAR])
             );
         }
@@ -120,7 +122,7 @@ class Product extends Model
         }
 
         if (! isset($value) || $value < 0) {
-            throw new \InvalidArgumentException(
+            throw new InvalidProductAttributeException(
                 __('message.products.quantity_required')
             );
         }
@@ -133,7 +135,7 @@ class Product extends Model
      */
     public static function register(array $array): self
     {
-        $product = new self();
+        $product = new self;
         $product->fill($array);
         $product->save();
 
@@ -145,7 +147,7 @@ class Product extends Model
         $product = self::findOrFail($id);
 
         if (isset($array['name']) && $product->name !== $array['name']) {
-            throw new \InvalidArgumentException(
+            throw new InvalidProductAttributeException(
                 __('message.products.name_unchangeable')
             );
         }
@@ -161,16 +163,16 @@ class Product extends Model
         $query = self::findByName($name);
 
         if (! $query) {
-            throw new \RuntimeException(
+            throw new ProductNotFoundException(
                 __('message.products.name_not_found', ['name' => $name])
             );
-        };
+        }
 
         if ($query->quantity > 0) {
-            throw new \RuntimeException(
+            throw new ProductSupplyNotEmptyException(
                 __('message.products.cannot_delete_qty')
             );
-        };
+        }
 
         $query->delete();
     }
@@ -178,15 +180,15 @@ class Product extends Model
     public static function findByName(string $name): ?self
     {
         if (empty($name)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidProductAttributeException(
                 __('message.products.name_required')
             );
-        };
+        }
 
         $product = self::where('name', $name)->first();
 
         if (! $product) {
-            throw new \RuntimeException(
+            throw new ProductNotFoundException(
                 __('message.products.name_not_found', ['name' => $name])
             );
         } else {
@@ -230,7 +232,7 @@ class Product extends Model
             $this->isLessThanOrEqualsZero($product->quantity)
             || $product->quantity < $requestedQuantity
         ) {
-            throw new \InvalidArgumentException(
+            throw new InvalidProductAttributeException(
                 __(
                     'message.products.quantity_exceed',
                     [
@@ -239,13 +241,13 @@ class Product extends Model
                     ]
                 )
             );
-        };
+        }
     }
 
     private function isLessThanOrEqualsZero($value): void
     {
         if ($value <= 0) {
-            throw new \InvalidArgumentException(
+            throw new InvalidProductAttributeException(
                 __('message.general.fbd_op')
             );
         }
