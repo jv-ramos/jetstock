@@ -40,7 +40,6 @@ class ProductController extends Controller
 
     public function destroy(DestroyRequest $request, Product $product): void
     {
-        $request->validated();
         $this->product::remove($product->name);
     }
 }

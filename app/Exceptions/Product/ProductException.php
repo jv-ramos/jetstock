@@ -3,7 +3,7 @@
 namespace App\Exceptions\Product;
 
 use Exception;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 class ProductException extends Exception
