@@ -9,7 +9,8 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::prefix('/v1/products')->group(function () {
-    Route::apiResource('/', ProductController::class)->only('index', 'store', 'destroy');
+    Route::apiResource('/', ProductController::class)->only('index', 'store');
     Route::get('/{product}', [ProductController::class, 'show']);
     Route::put('/{product}', [ProductController::class, 'update']);
+    Route::delete('/{product}', [ProductController::class, 'destroy']);
 });

@@ -226,6 +226,28 @@ class Product extends Model
         $this->save();
     }
 
+    public function calculateTotalInventoryValue(): float
+    {
+        return (self::query()
+            ->selectRaw('SUM(amount * quantity) as total')
+            ->value('total') / 100) ?? 0;
+    }
+
+    private function validadeOrderItem(array $item): void
+    {
+        if (empty($item['name'])) {
+            throw new InvalidProductAttributeException(
+                __('message.products.name_required')
+            );
+        }
+
+        if (! is_int($item['quantity'] ?? null)) {
+            throw new InvalidProductAttributeException(
+                __('message.general.fbd_op')
+            );
+        }
+    }
+
     private function validateStock(Product $product, int $requestedQuantity): void
     {
         if (
