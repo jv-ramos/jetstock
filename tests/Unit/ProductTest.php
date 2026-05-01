@@ -2,9 +2,9 @@
 
 namespace Tests\Unit;
 
+use App\Exceptions\Product\InvalidProductAttributeException;
 use App\Models\Product;
 use Database\Factories\ProductFactory;
-use InvalidArgumentException;
 
 describe('Product', function () {
     /**
@@ -18,7 +18,7 @@ describe('Product', function () {
             'quantity' => 10,
         ]);
     })->throws(
-        InvalidArgumentException::class,
+        InvalidProductAttributeException::class,
         'Name must be at least 3 characters long.'
     );
 
@@ -30,7 +30,7 @@ describe('Product', function () {
             'quantity' => 10,
         ]);
     })->throws(
-        InvalidArgumentException::class,
+        InvalidProductAttributeException::class,
         'Name must not exceed 50 characters'
     );
 
@@ -42,7 +42,7 @@ describe('Product', function () {
             'quantity' => 10,
         ]);
     })->throws(
-        InvalidArgumentException::class,
+        InvalidProductAttributeException::class,
         'Description must not exceed 255 characters'
     );
 
@@ -52,28 +52,28 @@ describe('Product', function () {
     it('throws exception when amount is null', function () {
         ProductFactory::new()->make(['amount' => null]);
     })->throws(
-        InvalidArgumentException::class,
+        InvalidProductAttributeException::class,
         'Forbidden operation'
     );
 
     it('throws exception when quantity is null', function () {
         ProductFactory::new()->make(['quantity' => null]);
     })->throws(
-        InvalidArgumentException::class,
+        InvalidProductAttributeException::class,
         'Quantity must be equals or greater than 0 (ZERO).'
     );
 
     it('throws exception when amount is negative', function () {
         ProductFactory::new()->make(['amount' => -10]);
     })->throws(
-        InvalidArgumentException::class,
+        InvalidProductAttributeException::class,
         'Forbidden operation'
     );
 
     it('throws exception when quantity is negative', function () {
         ProductFactory::new()->make(['quantity' => -5]);
     })->throws(
-        InvalidArgumentException::class,
+        InvalidProductAttributeException::class,
         'Quantity must be equals or greater than 0 (ZERO).'
     );
 
@@ -84,7 +84,7 @@ describe('Product', function () {
         $product = ProductFactory::new()->make();
         $product->stockDecrement(-10);
     })->throws(
-        InvalidArgumentException::class,
+        InvalidProductAttributeException::class,
         'Forbidden operation'
     );
 
@@ -92,7 +92,7 @@ describe('Product', function () {
         $product = ProductFactory::new()->make();
         $product->stockDecrement(0);
     })->throws(
-        InvalidArgumentException::class,
+        InvalidProductAttributeException::class,
         'Forbidden operation'
     );
 
@@ -103,7 +103,7 @@ describe('Product', function () {
         ]);
         $product->stockDecrement(2);
     })->throws(
-        InvalidArgumentException::class,
+        InvalidProductAttributeException::class,
         'Forbidden operation'
     );
 
@@ -114,7 +114,7 @@ describe('Product', function () {
         $product = ProductFactory::new()->make();
         $product->stockIncrement(-10);
     })->throws(
-        InvalidArgumentException::class,
+        InvalidProductAttributeException::class,
         'Forbidden operation'
     );
 
@@ -122,7 +122,7 @@ describe('Product', function () {
         $product = ProductFactory::new()->make();
         $product->stockDecrement(0);
     })->throws(
-        InvalidArgumentException::class,
+        InvalidProductAttributeException::class,
         'Forbidden operation'
     );
 });
