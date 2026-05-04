@@ -13,4 +13,6 @@ Route::prefix('/v1/products')->group(function () {
     Route::get('/{product}', [ProductController::class, 'show']);
     Route::put('/{product}', [ProductController::class, 'update']);
     Route::delete('/{product}', [ProductController::class, 'destroy']);
+    Route::get('/inventory/total', [ProductController::class, 'calculateTotalInventoryValue']);
+    Route::post('/stockUpdate/{product}', [ProductController::class, 'stockUpdate']);
 });
