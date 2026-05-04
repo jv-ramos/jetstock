@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\V1;
 
-use App\Models\Product;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\DestroyRequest;
+use App\Http\Requests\StockRequest;
 use App\Http\Requests\StoreRequest;
 use App\Http\Requests\UpdateRequest;
 use App\Http\Resources\ProductResource;
-use App\Http\Controllers\Controller;
+use App\Models\Product;
 
 class ProductController extends Controller
 {
@@ -41,5 +42,16 @@ class ProductController extends Controller
     public function destroy(DestroyRequest $request, Product $product): void
     {
         $this->product::remove($product->name);
+    }
+
+    public function calculateTotalInventoryValue()
+    {
+        $total = $this->product->calculateTotalInventoryValue();
+
+        return response()->json(['total' => $total]);
+    }
+
+    public function stockUpdate(StockRequest $request, Product $product) {
+        $product->stockUpdate($request->validated());
     }
 }

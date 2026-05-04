@@ -199,30 +199,22 @@ class Product extends Model
     /**
      * STOCK METHODS
      */
-    public function stockIncrement($value = 1): void
+    public function stockUpdate(array $operation): void
     {
-        // TODO: Create a stock history to log changes in stock
-        if (is_string($value)) {
-            $value = (int) str_replace([',', ' '], '', $value);
+        $this->isLessThanOrEqualsZero($operation['value']);
+        $this->validateStock($this, $operation['value']);
+
+        switch ($operation['type']) {
+            case 'increment':
+                $this->attributes['quantity'] += $operation['value'];
+                break;
+            case 'decrement':
+                $this->attributes['quantity'] -= $operation['value'];
+                break;
+            default:
+                break;
         }
 
-        $this->isLessThanOrEqualsZero($value);
-
-        $this->attributes['quantity'] += $value;
-        $this->save();
-    }
-
-    public function stockDecrement($value = 1): void
-    {
-        if (is_string($value)) {
-            $value = (int) str_replace([',', ' '], '', $value);
-        }
-
-        $this->isLessThanOrEqualsZero($value);
-
-        $this->validateStock($this, $value);
-
-        $this->attributes['quantity'] -= $value;
         $this->save();
     }
 
