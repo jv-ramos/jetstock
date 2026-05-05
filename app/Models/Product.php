@@ -199,17 +199,17 @@ class Product extends Model
     /**
      * STOCK METHODS
      */
-    public function stockUpdate(array $operation): void
+    public function stockUpdate(array $order): void
     {
-        $this->isLessThanOrEqualsZero($operation['value']);
-        $this->validateStock($this, $operation['value']);
+        $this->isLessThanOrEqualsZero($order['quantity']);
+        $this->validateStock($this, $order['quantity']);
 
-        switch ($operation['type']) {
-            case 'increment':
-                $this->attributes['quantity'] += $operation['value'];
+        switch ($order['operation']) {
+            case true:
+                $this->attributes['quantity'] += $order['quantity'];
                 break;
-            case 'decrement':
-                $this->attributes['quantity'] -= $operation['value'];
+            case false:
+                $this->attributes['quantity'] -= $order['quantity'];
                 break;
             default:
                 break;
