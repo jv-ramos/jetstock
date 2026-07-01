@@ -23,8 +23,8 @@ class StockRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => 'required|string',
-            'value' => 'required|int',
+            'operation' => 'required|boolean',
+            'quantity' => 'required|int',
         ];
     }
 }

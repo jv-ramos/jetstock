@@ -9,6 +9,8 @@ use App\Http\Requests\StoreRequest;
 use App\Http\Requests\UpdateRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Throwable;
 
 class ProductController extends Controller
 {
@@ -44,14 +46,25 @@ class ProductController extends Controller
         $this->product::remove($product->name);
     }
 
-    public function calculateTotalInventoryValue()
+    public function calculateTotalInventoryValue(): JsonResponse
     {
         $total = $this->product->calculateTotalInventoryValue();
 
         return response()->json(['total' => $total]);
     }
 
-    public function stockUpdate(StockRequest $request, Product $product) {
-        $product->stockUpdate($request->validated());
+    public function stockUpdate(StockRequest $request, Product $product): JsonResponse
+    {
+        try {
+            $product->stockUpdate($request->validated());
+        } catch (Throwable $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+        return response()->json([
+            'id' => $product->id,
+            'name' => $product->name,
+            'amount' => $product->amount,
+            'quantity' => $request->quantity,
+        ]);
     }
 }
