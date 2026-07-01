@@ -22,12 +22,17 @@ class ProductServices
     //     }
     // }
 
-    public static function existsAndHasMoreThan(Product $product, int $quantity)
+    public static function existsAndHasMoreThan(Product $product, int $quantity): void
     {
         if ($product->exists && $product->exists < $quantity) {
             throw new \InvalidArgumentException(
                 __('message.products.quantity_exceed', ['name' => $product->name, 'quantity' => $product->quantity])
             );
-        };
+        }
+    }
+
+    public function deleteProductOrThrowError(Product $product)
+    {
+        $this->product::remove($product->name);
     }
 }

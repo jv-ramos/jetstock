@@ -16,6 +16,7 @@ class Product extends Model
 
     protected $fillable = [
         'name',
+        'image',
         'description',
         'amount',
         'quantity',
@@ -202,13 +203,13 @@ class Product extends Model
     public function stockUpdate(array $order): void
     {
         $this->isLessThanOrEqualsZero($order['quantity']);
-        $this->validateStock($this, $order['quantity']);
 
         switch ($order['operation']) {
             case true:
                 $this->attributes['quantity'] += $order['quantity'];
                 break;
             case false:
+                $this->validateStock($this, $order['quantity']);
                 $this->attributes['quantity'] -= $order['quantity'];
                 break;
             default:
@@ -243,8 +244,7 @@ class Product extends Model
     private function validateStock(Product $product, int $requestedQuantity): void
     {
         if (
-            $this->isLessThanOrEqualsZero($product->quantity)
-            || $product->quantity < $requestedQuantity
+            $product->quantity < $requestedQuantity
         ) {
             throw new InvalidProductAttributeException(
                 __(
